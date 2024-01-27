@@ -8,7 +8,6 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import telran.drones.dto.MedicationDto;
-import telran.drones.dto.State;
 
 @Entity
 @Table(name = "medications")
