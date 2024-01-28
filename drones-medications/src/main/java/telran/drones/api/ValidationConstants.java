@@ -1,7 +1,7 @@
 package telran.drones.api;
 
 public interface ValidationConstants {
-	int WAX_CHARACTERS_NUMBER = 100;
+	int MAX_CHARACTERS_NUMBER = 100;
 	String WRONG_DRONE_SERIAL_NUMBER = "Drone's serial number must be maximum of 100 characters";	
 	String MEDICATION_NAME_REGEXP = "^[a-zA-Z0-9_-]+$";
 	String MEDICATION_CODE_REGEXP = "^[A-Z0-9_]+$";

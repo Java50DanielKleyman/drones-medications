@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import telran.drones.dto.DroneDto;
 import telran.drones.dto.DroneMedication;
+import telran.drones.dto.MedicationDto;
 import telran.drones.service.DronesService;
 
 @RestController
@@ -30,4 +31,9 @@ public class DronesController {
 		log.debug("loadDrone received {}", droneMedication);
 		return dronesService.loadDrone(droneMedication);
 	};
+	@PostMapping("medication")
+	MedicationDto addMedication(@RequestBody @Valid MedicationDto medicationDto) {
+		log.debug("medicationDto received {}", medicationDto);
+		return dronesService.addMedication(medicationDto);
+	}
 }

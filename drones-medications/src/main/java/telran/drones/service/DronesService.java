@@ -2,6 +2,7 @@ package telran.drones.service;
 
 import telran.drones.dto.DroneDto;
 import telran.drones.dto.DroneMedication;
+import telran.drones.dto.MedicationDto;
 
 public interface DronesService {
    /**
@@ -22,5 +23,6 @@ public interface DronesService {
 	 * @return DroneMedication for success
 	 * @throws appropriate exception in accordance with the required checks
 	 */
-   DroneMedication loadDrone(DroneMedication droneMedication);
+   DroneMedication loadDrone(DroneMedication droneMedication); 
+   MedicationDto addMedication(MedicationDto medicationDto);
 }
