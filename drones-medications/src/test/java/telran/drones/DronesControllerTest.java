@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import telran.drones.dto.DroneDto;
+import telran.drones.dto.DroneMedication;
 import telran.drones.dto.ModelType;
 import telran.drones.service.DronesService;
 
@@ -37,6 +38,7 @@ class DronesControllerTest {
 	ObjectMapper mapper; // object for getting JSON from object and object from JSON
 
 	DroneDto droneDto = new DroneDto("A12345", ModelType.Lightweight);
+	DroneMedication droneMedication = new DroneMedication("A12345", "CODE1");
 
 	@Test	
 	void testRegisterDrone() throws Exception {
@@ -48,4 +50,13 @@ class DronesControllerTest {
 		assertEquals(jsonDroneDto, actualJSON );
 	}
 
+	@Test	
+	void testLoadDrone() throws Exception{
+		when(dronesService.loadDrone(droneMedication)).thenReturn(droneMedication);
+		String jsonDroneMedication = mapper.writeValueAsString(droneMedication);
+		String actualJSON = mockMvc.perform(post("http://localhost:8080/drones/load").contentType(MediaType.APPLICATION_JSON)
+				.content(jsonDroneMedication)).andExpect(status().isOk()).andReturn().getResponse()
+		.getContentAsString();
+		assertEquals(jsonDroneMedication, actualJSON );
+	}
 }
