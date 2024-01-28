@@ -14,23 +14,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import telran.drones.dto.*;
 import telran.drones.service.DronesService;
 
 @WebMvcTest // inserting into Application Context Mock WEB server instead of real WebServer
 class DronesControllerTest {
-	private static final String DRONE_NOT_FOUND = "Drone not found";
-	private static final String MEDICATION_NOT_FOUND = "Medication not found";
+	
 	private static final String DRONE_ALREADY_EXISTS = "Drone with a given number already exists ";
-	private static final String MEDICATION_NOT_EXISTS = "Medication does not exist ";
-	private static final String STATE_NOT_IDLE = "Drone is not in idle state now";
-	private static final String BATTERY_CAPACITY_STATE = "Battery capacity is lower then 25%";
-	private static final String DRONE_MODEL_NOT_FOUND = "Drone model not found";
-
+	private static final String MEDICATION_ALREADY_EXISTS = "Medication already exists ";
 	private static String WRONG_DRONE_SERIAL_NUMBER = "Drone's serial number must be maximum of 100 characters";
 	private static String WRONG_MEDICATION_NAME = "Medication name must be only letters, numbers, ‘-‘, ‘_’";
 	private static String WRONG_MEDICATION_CODE = "Medication code must be only upper case letters, underscore and numbers";
@@ -39,7 +31,7 @@ class DronesControllerTest {
 	private static String MISSING_MEDICATION_CODE = "Missing medication code";
 	private static String MISSING_MEDICATION_WEIGHT = "Missing medication weight";
 	private static String WRONG_DRON_SERIAL_NUMBER = "11111111111111111111111111111111111111111111111111111xvxcvxvxvxcvxvxvxvxvxvcxvxvxvxxvx111111111111111111111111111111111111";
-	
+
 	@MockBean // inserting into Application Context Mock instead of real Service
 				// implementation
 	DronesService dronesService;
@@ -134,18 +126,43 @@ class DronesControllerTest {
 				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
 		assertEquals(WRONG_MEDICATION_NAME, response);
 	}
+
 	@Test
 	void addMedicationMissingFields() throws Exception {
-		String jsonPersonDto = mapper.writeValueAsString(medicationDto3); //conversion from carDto object to string JSON
-		String response = mockMvc.perform(post("http://localhost:8080/drones/medication").contentType(MediaType.APPLICATION_JSON)
-				.content(jsonPersonDto)).andExpect(status().isBadRequest())
-				.andReturn().getResponse().getContentAsString();
-		allFieldsMissingTest(expectedMedicationMissingFieldsMessages , response);
+		String jsonPersonDto = mapper.writeValueAsString(medicationDto3); // conversion from carDto object to string
+																			// JSON
+		String response = mockMvc
+				.perform(post("http://localhost:8080/drones/medication").contentType(MediaType.APPLICATION_JSON)
+						.content(jsonPersonDto))
+				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+		allFieldsMissingTest(expectedMedicationMissingFieldsMessages, response);
 	}
-	private void allFieldsMissingTest(String [] expectedMessages, String response) {
+
+	private void allFieldsMissingTest(String[] expectedMessages, String response) {
 		Arrays.sort(expectedMessages);
-		String [] actualMessages = response.split(";");
+		String[] actualMessages = response.split(";");
 		Arrays.sort(actualMessages);
 		assertArrayEquals(expectedMessages, actualMessages);
+	}
+
+	/*********** ALternative flows - Service Exceptions Handling *************/
+	@Test
+	void dronAlreadyExistsTest() throws Exception{
+		when(dronesService.registerDrone(droneDto)).thenThrow(new IllegalStateException(DRONE_ALREADY_EXISTS));
+		String jsonDroneDto = mapper.writeValueAsString(droneDto); //conversion from carDto object to string JSON
+		String response = mockMvc.perform(post("http://localhost:8080/drones").contentType(MediaType.APPLICATION_JSON)
+				.content(jsonDroneDto)).andExpect(status().isBadRequest()).andReturn().getResponse()
+		.getContentAsString();
+		assertEquals(DRONE_ALREADY_EXISTS, response);
+	}
+
+	@Test
+	void MedicationAlreadyExistsTest() throws Exception{
+		when(dronesService.addMedication(medicationDto)).thenThrow(new IllegalStateException(MEDICATION_ALREADY_EXISTS));
+		String jsonMedicationDto = mapper.writeValueAsString(medicationDto); //conversion from carDto object to string JSON
+		String response = mockMvc.perform(post("http://localhost:8080/drones/medication").contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMedicationDto)).andExpect(status().isBadRequest()).andReturn().getResponse()
+		.getContentAsString();
+		assertEquals(MEDICATION_ALREADY_EXISTS, response);
 	}
 }
