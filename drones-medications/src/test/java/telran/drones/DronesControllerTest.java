@@ -20,7 +20,7 @@ import telran.drones.service.DronesService;
 
 @WebMvcTest // inserting into Application Context Mock WEB server instead of real WebServer
 class DronesControllerTest {
-	
+
 	private static final String DRONE_ALREADY_EXISTS = "Drone with a given number already exists ";
 	private static final String MEDICATION_ALREADY_EXISTS = "Medication already exists ";
 	private static String WRONG_DRONE_SERIAL_NUMBER = "Drone's serial number must be maximum of 100 characters";
@@ -30,6 +30,7 @@ class DronesControllerTest {
 	private static String MISSING_MEDICATION_NAME = "Missing medication name";
 	private static String MISSING_MEDICATION_CODE = "Missing medication code";
 	private static String MISSING_MEDICATION_WEIGHT = "Missing medication weight";
+	private static String WRONG_MEDICATION_CODE_NUMBER = "ABhdhdh1";
 	private static String WRONG_DRON_SERIAL_NUMBER = "11111111111111111111111111111111111111111111111111111xvxcvxvxvxcvxvxvxvxvxvcxvxvxvxxvx111111111111111111111111111111111111";
 
 	@MockBean // inserting into Application Context Mock instead of real Service
@@ -44,12 +45,16 @@ class DronesControllerTest {
 	DroneDto droneDto1 = new DroneDto(WRONG_DRON_SERIAL_NUMBER, ModelType.Lightweight);
 	DroneDto droneDto2 = new DroneDto(null, ModelType.Lightweight);
 	DroneMedication droneMedication = new DroneMedication("A12345", "CODE1");
+	DroneMedication droneMedicationWrongDroneNumber = new DroneMedication(WRONG_DRON_SERIAL_NUMBER, "CODE1");
+	DroneMedication droneMedicationWrongMedicationCode = new DroneMedication("A12345", WRONG_MEDICATION_CODE_NUMBER);
+	DroneMedication droneMedicationMissingFields = new DroneMedication(null, null);
 	MedicationDto medicationDto = new MedicationDto("ABC1", "medication", 150);
-	MedicationDto medicationDto1 = new MedicationDto("ABhdhdh1", "medication", 150);
+	MedicationDto medicationDto1 = new MedicationDto(WRONG_MEDICATION_CODE_NUMBER, "medication", 150);
 	MedicationDto medicationDto2 = new MedicationDto("ABC1", "medica@@@tion", 150);
 	MedicationDto medicationDto3 = new MedicationDto(null, null, null);
 	private String[] expectedMedicationMissingFieldsMessages = { MISSING_MEDICATION_CODE, MISSING_MEDICATION_NAME,
 			MISSING_MEDICATION_WEIGHT };
+	private String[] expectedMedicationMissingFieldsMessages1 = { MISSING_DRONE_NUMBER, MISSING_MEDICATION_CODE };
 
 	@Test	
 	void testRegisterDrone() throws Exception {
@@ -125,6 +130,36 @@ class DronesControllerTest {
 						.content(jsonDroneDto))
 				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
 		assertEquals(WRONG_MEDICATION_NAME, response);
+	}
+
+	@Test
+	void wrongDroneMedicationDroneNumber() throws Exception {
+		String jsonDroneMedication = mapper.writeValueAsString(droneMedicationWrongDroneNumber);
+		String response = mockMvc
+				.perform(post("http://localhost:8080/drones/load").contentType(MediaType.APPLICATION_JSON)
+						.content(jsonDroneMedication))
+				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+		assertEquals(WRONG_DRONE_SERIAL_NUMBER, response);
+	}
+
+	@Test
+	void wrongDroneMedicationCode() throws Exception {
+		String jsonDroneMedication = mapper.writeValueAsString(droneMedicationWrongMedicationCode);
+		String response = mockMvc
+				.perform(post("http://localhost:8080/drones/load").contentType(MediaType.APPLICATION_JSON)
+						.content(jsonDroneMedication))
+				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+		assertEquals(WRONG_MEDICATION_CODE, response);
+	}
+
+	@Test
+	void loadDroneMedicationMissingFields() throws Exception {
+		String jsonDroneMedication = mapper.writeValueAsString(droneMedicationMissingFields);
+		String response = mockMvc
+				.perform(post("http://localhost:8080/drones/load").contentType(MediaType.APPLICATION_JSON)
+						.content(jsonDroneMedication))
+				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+		allFieldsMissingTest(expectedMedicationMissingFieldsMessages1, response);
 	}
 
 	@Test
