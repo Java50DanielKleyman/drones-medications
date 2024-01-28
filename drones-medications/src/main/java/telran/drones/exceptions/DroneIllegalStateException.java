@@ -3,8 +3,8 @@ package telran.drones.exceptions;
 import telran.drones.api.ServiceExceptionMessages;
 
 @SuppressWarnings("serial")
-public class IllegalDroneStateException extends IllegalStateException {
-	public IllegalDroneStateException() {
+public class DroneIllegalStateException extends IllegalStateException {
+	public DroneIllegalStateException() {
 		super(ServiceExceptionMessages.DRONE_ALREADY_EXISTS);
 	}
 
