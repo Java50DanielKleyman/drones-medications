@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ class DronesControllerTest {
 	private static String MISSING_MEDICATION_CODE = "Missing medication code";
 	private static String MISSING_MEDICATION_WEIGHT = "Missing medication weight";
 	private static String WRONG_DRON_SERIAL_NUMBER = "11111111111111111111111111111111111111111111111111111xvxcvxvxvxcvxvxvxvxvxvcxvxvxvxxvx111111111111111111111111111111111111";
+	
 	@MockBean // inserting into Application Context Mock instead of real Service
 				// implementation
 	DronesService dronesService;
@@ -53,7 +55,9 @@ class DronesControllerTest {
 	MedicationDto medicationDto = new MedicationDto("ABC1", "medication", 150);
 	MedicationDto medicationDto1 = new MedicationDto("ABhdhdh1", "medication", 150);
 	MedicationDto medicationDto2 = new MedicationDto("ABC1", "medica@@@tion", 150);
-	MedicationDto medicationDto3 = new MedicationDto(null, null, 0);
+	MedicationDto medicationDto3 = new MedicationDto(null, null, null);
+	private String[] expectedMedicationMissingFieldsMessages = { MISSING_MEDICATION_CODE, MISSING_MEDICATION_NAME,
+			MISSING_MEDICATION_WEIGHT };
 
 	@Test	
 	void testRegisterDrone() throws Exception {
@@ -129,5 +133,19 @@ class DronesControllerTest {
 						.content(jsonDroneDto))
 				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
 		assertEquals(WRONG_MEDICATION_NAME, response);
+	}
+	@Test
+	void addMedicationMissingFields() throws Exception {
+		String jsonPersonDto = mapper.writeValueAsString(medicationDto3); //conversion from carDto object to string JSON
+		String response = mockMvc.perform(post("http://localhost:8080/drones/medication").contentType(MediaType.APPLICATION_JSON)
+				.content(jsonPersonDto)).andExpect(status().isBadRequest())
+				.andReturn().getResponse().getContentAsString();
+		allFieldsMissingTest(expectedMedicationMissingFieldsMessages , response);
+	}
+	private void allFieldsMissingTest(String [] expectedMessages, String response) {
+		Arrays.sort(expectedMessages);
+		String [] actualMessages = response.split(";");
+		Arrays.sort(actualMessages);
+		assertArrayEquals(expectedMessages, actualMessages);
 	}
 }
