@@ -27,6 +27,6 @@ public class Drone {
 	}
 
 	public DroneDto build() {
-		return new DroneDto(number, model.getModelName());
+		return new DroneDto(number, model.getModel_name());
 	}
 }

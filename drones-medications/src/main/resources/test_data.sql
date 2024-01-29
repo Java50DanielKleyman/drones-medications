@@ -2,23 +2,24 @@ delete from drones;
 delete from drone_models;
 delete from event_logs;
 delete from medications;
+insert into drone_models (model_name, weight) values
+('Lightweight', 100 ),
+('Middleweight', 200),
+('Cruiserweight', 300),
+('Heavyweight', 450);
 insert into drones (drone_number, model_name, battery_capacity, drone_state ) values
-{'number1', 'Lightweight',  100, 'IDLE'},
-{'number2', 'Middleweight',  100, 'IDLE'},
-{'number3', 'Middleweight',  100, 'IDLE'},
-{'number4', 'Cruiserweight',  100, 'IDLE'},
-{'number5', 'Heavyweight',  100, 'IDLE'};
-insert into drone_models (modelName, weight) values
-{'Lightweight', 100 },
-{'Middleweight', 200},
-{'Cruiserweight', 300},
-{'Heavyweight', 450};
+('number1', 'Lightweight',  100, 'IDLE'),
+('number2', 'Middleweight',  100, 'IDLE'),
+('number3', 'Middleweight',  100, 'IDLE'),
+('number4', 'Cruiserweight',  100, 'IDLE'),
+('number5', 'Heavyweight',  100, 'IDLE');
+
 insert into medications (medication_code, medication_name, medication_weight) values
-{ 'CODE1', 'medication1', 30},
-{ 'CODE2', 'medication2', 50},
-{ 'CODE3', 'medication3', 70},
-{ 'CODE4', 'medication4', 100},
-{ 'CODE5', 'medication5', 150};
+( 'CODE1', 'medication1', 30),
+( 'CODE2', 'medication2', 50),
+( 'CODE3', 'medication3', 70),
+( 'CODE4', 'medication4', 100),
+( 'CODE5', 'medication5', 150);
 insert into event_logs (timestamp, drone_number, state, battery_capacity) values
 ('2024-01-27 15:30:00', 'number1', 'IDLE', 100),
 ('2024-01-27 16:45:00', 'number2', 'LOADING', 80),

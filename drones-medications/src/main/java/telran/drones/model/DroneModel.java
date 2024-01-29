@@ -10,6 +10,7 @@ import lombok.*;
 public class DroneModel {
 	@Id
 	@Enumerated(EnumType.STRING)
-ModelType modelName;
+	@Column(name = "model_name")
+ModelType model_name;
 	int weight;
 }
