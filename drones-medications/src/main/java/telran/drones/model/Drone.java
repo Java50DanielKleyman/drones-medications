@@ -19,6 +19,7 @@ public class Drone {
 	@Column(name = "battery_capacity")
 	int batteryCapacity;
 	@Enumerated(EnumType.STRING)
+	@Column(name="drone_state")
 	State state;
 
 	static public Drone of(DroneDto droneDto) {
