@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -13,19 +14,34 @@ import lombok.extern.slf4j.Slf4j;
 import telran.drones.dto.DroneDto;
 import telran.drones.dto.DroneMedication;
 import telran.drones.dto.MedicationDto;
+import telran.drones.exceptions.DroneIllegalStateException;
 import telran.drones.model.Drone;
 import telran.drones.model.EventLog;
 import telran.drones.model.Medication;
+import telran.drones.repo.DroneModelRepo;
+import telran.drones.repo.DroneRepo;
+import telran.drones.repo.EventLogRepo;
+import telran.drones.repo.MedicationRepo;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class DronesServiceImpl implements DronesService {
+	final DroneRepo droneRepo;
+	final DroneModelRepo droneModelRepo;
+	final EventLogRepo ventLogRepo;
+	final MedicationRepo medicationRepo;
 
 	@Override
+	@Transactional
 	public DroneDto registerDrone(DroneDto droneDto) {
-		// TODO Auto-generated method stub
-		return null;
+		if(droneRepo.existsById(droneDto.number())) {
+			throw new DroneIllegalStateException();
+		}
+		Drone drone = Drone.of(droneDto);
+		droneRepo.save(drone);
+		log.debug("Drone {} has been registered", drone);
+		return droneDto;
 	}
 
 	@Override

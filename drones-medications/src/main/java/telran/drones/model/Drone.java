@@ -29,4 +29,8 @@ public class Drone {
 	public DroneDto build() {
 		return new DroneDto(number, model.getModel_name());
 	}
+	@Override
+	public String toString() {
+		return "Drone [number=" + number + ", model=" + model.getModel_name() + ", batteryCapacity=" + batteryCapacity + ", state=" + state + "]";
+	}
 }
