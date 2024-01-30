@@ -15,20 +15,10 @@ import telran.drones.dto.DroneDto;
 import telran.drones.dto.DroneMedication;
 import telran.drones.dto.MedicationDto;
 import telran.drones.dto.State;
-import telran.drones.exceptions.BatteryIllegalStateException;
-import telran.drones.exceptions.DroneIllegalStateException;
-import telran.drones.exceptions.DroneModelNotFoundException;
-import telran.drones.exceptions.DroneNotFoundException;
-import telran.drones.exceptions.MedicationIllegalStateException;
-import telran.drones.exceptions.StateIllegalStateException;
-import telran.drones.model.Drone;
-import telran.drones.model.DroneModel;
-import telran.drones.model.EventLog;
-import telran.drones.model.Medication;
-import telran.drones.repo.DroneModelRepo;
-import telran.drones.repo.DroneRepo;
-import telran.drones.repo.EventLogRepo;
-import telran.drones.repo.MedicationRepo;
+import telran.drones.exceptions.*;
+import telran.drones.model.*;
+import telran.drones.repo.*;
+
 
 @Service
 @RequiredArgsConstructor
@@ -57,10 +47,10 @@ public class DronesServiceImpl implements DronesService {
 	@Override
 	public DroneMedication loadDrone(DroneMedication droneMedication) {
 		if (!droneRepo.existsById(droneMedication.droneNumber())) {
-			throw new DroneIllegalStateException();
+			throw new DroneNotFoundException();
 		}
 		if (!medicationRepo.existsById(droneMedication.medicationCode())) {
-			throw new MedicationIllegalStateException();
+			throw new MedicationNotFoundException();
 		}
 		Drone drone = droneRepo.findById(droneMedication.droneNumber()).orElseThrow(() -> new DroneNotFoundException());
 		if (drone.getBatteryCapacity() < 25) {
