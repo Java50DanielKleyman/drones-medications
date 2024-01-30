@@ -1,5 +1,6 @@
 package telran.drones.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,12 +11,18 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import telran.drones.dto.DroneDto;
 import telran.drones.dto.DroneMedication;
 import telran.drones.dto.MedicationDto;
+import telran.drones.dto.State;
+import telran.drones.exceptions.BatteryIllegalStateException;
 import telran.drones.exceptions.DroneIllegalStateException;
+import telran.drones.exceptions.DroneModelNotFoundException;
+import telran.drones.exceptions.DroneNotFoundException;
+import telran.drones.exceptions.MedicationIllegalStateException;
+import telran.drones.exceptions.StateIllegalStateException;
 import telran.drones.model.Drone;
+import telran.drones.model.DroneModel;
 import telran.drones.model.EventLog;
 import telran.drones.model.Medication;
 import telran.drones.repo.DroneModelRepo;
@@ -29,16 +36,19 @@ import telran.drones.repo.MedicationRepo;
 public class DronesServiceImpl implements DronesService {
 	final DroneRepo droneRepo;
 	final DroneModelRepo droneModelRepo;
-	final EventLogRepo ventLogRepo;
+	final EventLogRepo eventLogRepo;
 	final MedicationRepo medicationRepo;
 
 	@Override
 	@Transactional
 	public DroneDto registerDrone(DroneDto droneDto) {
-		if(droneRepo.existsById(droneDto.number())) {
+		if (droneRepo.existsById(droneDto.number())) {
 			throw new DroneIllegalStateException();
 		}
 		Drone drone = Drone.of(droneDto);
+		DroneModel model = droneModelRepo.findById(droneDto.modelType())
+				.orElseThrow(() -> new DroneModelNotFoundException());
+		drone.setModel(model);
 		droneRepo.save(drone);
 		log.debug("Drone {} has been registered", drone);
 		return droneDto;
@@ -46,8 +56,27 @@ public class DronesServiceImpl implements DronesService {
 
 	@Override
 	public DroneMedication loadDrone(DroneMedication droneMedication) {
-		// TODO Auto-generated method stub
-		return null;
+		if (!droneRepo.existsById(droneMedication.droneNumber())) {
+			throw new DroneIllegalStateException();
+		}
+		if (!medicationRepo.existsById(droneMedication.medicationCode())) {
+			throw new MedicationIllegalStateException();
+		}
+		Drone drone = droneRepo.findById(droneMedication.droneNumber()).orElseThrow(() -> new DroneNotFoundException());
+		if (drone.getBatteryCapacity() < 25) {
+			throw new BatteryIllegalStateException();
+		}
+		if (!drone.getState().equals(State.IDLE)) {
+			throw new StateIllegalStateException();
+		}
+		drone.setState(State.LOADING);
+		EventLog eventLog = new EventLog(LocalDateTime.now(), drone.getNumber(), drone.getState(),
+				drone.getBatteryCapacity());
+		droneRepo.save(drone);
+		eventLogRepo.save(eventLog);
+		log.debug("Event log {} created, drone {} state updated to LOADING", eventLog, drone);
+		return droneMedication;
+
 	}
 
 	@Override
