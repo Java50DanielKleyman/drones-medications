@@ -88,7 +88,7 @@ public class DronesServiceImpl implements DronesService {
 		if (!droneRepo.existsById(droneNumber)) {
 			throw new DroneNotFoundException();
 		}
-		List<String> medicationItems = logRepo.findMedicationsByDroneNumber(droneNumber);
+		List<String> medicationItems = logRepo.findMedicationsByDroneNumber(droneNumber, State.LOADING);
 		log.debug("found list of medication items: {} for droneNumber: {}", medicationItems, droneNumber);
 		return medicationItems;
 	}

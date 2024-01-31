@@ -11,6 +11,7 @@ import telran.drones.service.DronesServiceImpl;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,14 +45,16 @@ class DronesServiceTest {
 	EventLogRepo logRepo;
 	DroneDto droneDto = new DroneDto(DRONE4, ModelType.Cruiserweight);
 	DroneDto drone1 = new DroneDto(DRONE1, ModelType.Middleweight);
-	DroneMedication[] medications = { new DroneMedication(DRONE1, MED1), new DroneMedication(DRONE1, MED2),
-			new DroneMedication(DRONE1, MED2), new DroneMedication(DRONE1, MED3), new DroneMedication(DRONE1, MED3),
-			new DroneMedication(DRONE1, MED3), new DroneMedication(DRONE2, MED4), new DroneMedication(DRONE3, MED2) };
+	EventLog[] eventLogs = { new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED1),
+			new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED2),
+			new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED2),
+			new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED3),
+			new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED3),
+			new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED3),
+			new EventLog(LocalDateTime.now(), DRONE2, State.LOADING, 50, MED4),
+			new EventLog(LocalDateTime.now(), DRONE3, State.LOADING, 50, MED2) };
 	DroneMedication droneMedication1 = new DroneMedication(DRONE1, MED1);
-	DroneMedication[] droneMedications = { new DroneMedication(DRONE1, MED1), new DroneMedication(DRONE1, MED2),
-			new DroneMedication(DRONE1, MED2), new DroneMedication(DRONE1, MED3), new DroneMedication(DRONE1, MED3),
-			new DroneMedication(DRONE1, MED3), new DroneMedication(DRONE2, MED4), new DroneMedication(DRONE3, MED2) };
-	List<String> expected = Arrays.asList("MED3", "MED2", "MED1");
+	List<String> expected = Arrays.asList(MED3, MED2, MED1);
 
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
@@ -107,23 +110,11 @@ class DronesServiceTest {
 
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_NORMAL)
-	void checkMedicalItemsNormal() {		
-		loadDroneMedications();
+	void checkMedicalItemsNormal() {
+		for (EventLog el : eventLogs) {
+			logRepo.save(el);
+		}
 		assertEquals(expected, dronesService.checkMedicationItems(DRONE1));
-	}
-
-	private void loadDroneMedications() {	
-		 for (DroneMedication dm : droneMedications) {
-		        Drone drone = droneRepo.findById(dm.droneNumber()).orElseThrow(() -> new DroneNotFoundException());
-		        log.debug("Before loading - state of drone {}: {}", dm.droneNumber(), drone.getState());
-		        drone.setState(State.IDLE);
-		        log.debug("After setting to IDLE - state of drone {}: {}", dm.droneNumber(), drone.getState());
-		        dronesService.loadDrone(dm);
-		        log.debug("After loading - state of drone {}: {}", dm.droneNumber(), drone.getState());
-		        drone.setState(State.IDLE);
-		        log.debug("After setting back to IDLE - state of drone {}: {}", dm.droneNumber(), drone.getState());
-		    }
-
 	}
 
 }

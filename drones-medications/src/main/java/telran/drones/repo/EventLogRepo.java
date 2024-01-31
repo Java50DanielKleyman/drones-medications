@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import telran.drones.dto.State;
 import telran.drones.model.*;
 
 public interface EventLogRepo extends JpaRepository<EventLog, Long> {
@@ -12,10 +13,10 @@ public interface EventLogRepo extends JpaRepository<EventLog, Long> {
 			select medicationCode
 			from EventLog
 			where droneNumber= :droneNumber
-			and state="loading"
+			and state= :state
 			group by medicationCode
 			order by count(*) desc
 
 			""")
-	List<String> findMedicationsByDroneNumber(String droneNumber);
+	List<String> findMedicationsByDroneNumber(String droneNumber, State state);
 }
