@@ -21,10 +21,15 @@ import org.springframework.test.context.jdbc.Sql;
 
 class DronesServiceTest {
 	private static final String DRONE1 = "Drone-1";
-	private static final String MED1 = "MED_1";
+	private static final String DRONE2 = "Drone-2";
 	private static final String DRONE3 = "Drone-3";
-	private static final String SERVICE_TEST = "Service: ";
 	private static final String DRONE4 = "Drone-4";
+	private static final String MED1 = "MED_1";
+	private static final String MED2 = "MED_2";
+	private static final String MED3 = "MED_3";
+	private static final String MED4 = "MED_4";
+	private static final String SERVICE_TEST = "Service: ";	
+	
 	@Autowired
  DronesService dronesService;
 	@Autowired
@@ -33,7 +38,14 @@ class DronesServiceTest {
 	EventLogRepo logRepo;
 	DroneDto droneDto = new DroneDto(DRONE4, ModelType.Cruiserweight);
 	DroneDto drone1 = new DroneDto(DRONE1, ModelType.Middleweight);
-	DroneMedication droneMedication1 = new DroneMedication(DRONE1, MED1);		
+	DroneMedication droneMedication1 = new DroneMedication(DRONE1, MED1);	
+	DroneMedication droneMedication2 = new DroneMedication(DRONE1, MED2);
+	DroneMedication droneMedication3 = new DroneMedication(DRONE1, MED2);
+	DroneMedication droneMedication4 = new DroneMedication(DRONE1, MED3);
+	DroneMedication droneMedication5 = new DroneMedication(DRONE1, MED3);
+	DroneMedication droneMedication6 = new DroneMedication(DRONE1, MED3);
+	DroneMedication droneMedication7 = new DroneMedication(DRONE2, MED4);
+	DroneMedication droneMedication8 = new DroneMedication(DRONE3, MED2);
 			
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
@@ -82,5 +94,6 @@ class DronesServiceTest {
 		assertThrowsExactly(DroneAlreadyExistException.class,
 				() -> dronesService.registerDrone(drone1));
 	}
-	
+	@Test
+	@DisplayName(SERVICE_TEST + TestDisplayNames.
 }

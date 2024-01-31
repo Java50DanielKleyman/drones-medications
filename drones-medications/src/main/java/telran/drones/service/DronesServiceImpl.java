@@ -30,7 +30,6 @@ public class DronesServiceImpl implements DronesService {
 	final DronesModelRepo droneModelRepo;
 	@Value("${" + PropertiesNames.CAPACITY_THRESHOLD + ":25}")
 	int capacityThreshold;
-	
 
 	@Override
 	@Transactional
@@ -40,7 +39,7 @@ public class DronesServiceImpl implements DronesService {
 			throw new DroneAlreadyExistException();
 		}
 		Drone drone = Drone.of(droneDto);
-		
+
 		DroneModel droneModel = droneModelRepo.findById(droneDto.modelType())
 				.orElseThrow(() -> new ModelNotFoundException());
 		drone.setModel(droneModel);
@@ -54,8 +53,7 @@ public class DronesServiceImpl implements DronesService {
 	public DroneMedication loadDrone(DroneMedication droneMedication) {
 		String droneNumber = droneMedication.droneNumber();
 		String medicationCode = droneMedication.medicationCode();
-		log.debug("received: droneNumber={}, medicationCode={}",droneNumber ,
-				droneMedication.medicationCode());
+		log.debug("received: droneNumber={}, medicationCode={}", droneNumber, droneMedication.medicationCode());
 		log.debug("capacity threshold is {}", capacityThreshold);
 		Drone drone = droneRepo.findById(droneNumber).orElseThrow(() -> new DroneNotFoundException());
 		log.debug("found drone: {}", drone);
@@ -73,11 +71,12 @@ public class DronesServiceImpl implements DronesService {
 			throw new IllegalMedicationWeightException();
 		}
 		drone.setState(State.LOADING);
-		//EventLog(LocalDateTime timestamp, String droneNumber, State state, int batteryCapacity) 
+		// EventLog(LocalDateTime timestamp, String droneNumber, State state, int
+		// batteryCapacity)
 		EventLog eventLog = new EventLog(LocalDateTime.now(), drone.getNumber(), drone.getState(),
 				drone.getBatteryCapacity(), medicationCode);
 		logRepo.save(eventLog);
-		
+
 		log.debug("saved log: {}", eventLog);
 
 		return droneMedication;
@@ -85,8 +84,13 @@ public class DronesServiceImpl implements DronesService {
 
 	@Override
 	public List<String> checkMedicationItems(String droneNumber) {
-		// TODO Auto-generated method stub
-		return null;
+		log.debug("received: droneNumber={}", droneNumber);
+		if (!droneRepo.existsById(droneNumber)) {
+			throw new DroneNotFoundException();
+		}
+		List<String> medicationItems = logRepo.findMedicationsByDroneNumber(droneNumber);
+		log.debug("found list of medication items: {} for droneNumber: {}", medicationItems, droneNumber);
+		return medicationItems;
 	}
 
 	@Override
