@@ -1,12 +1,11 @@
 package telran.drones.api;
 
 public interface ServiceExceptionMessages {
-
-	String DRONE_NOT_FOUND = "Drone not found";
-	String MEDICATION_NOT_FOUND = "Medication not found";
-	String DRONE_ALREADY_EXISTS = "Drone with a given number already exists ";	
-	String STATE_NOT_IDLE = "Drone is not in idle state now";
-	String BATTERY_CAPACITY_STATE = "Battery capacity is lower then 25%";
-	String DRONE_MODEL_NOT_FOUND = "Drone model not found";
-	String MEDICATION_ALREADY_EXISTS = "Medication already exist ";
+String DRONE_NOT_FOUND = "Drone Not Found";
+String MEDICATION_NOT_FOUND = "Medication Not Found";
+String NOT_IDLE_STATE = "Loading may be done only in IDLE state";
+String LOW_BATTERY_CAPACITY = "Too low battery capacity";
+String WEIGHT_LIMIT_VIOLATION = "Dron's weight limit less than medication weight";
+String DRONE_ALREADY_EXISTS = "Drone already exists";
+String MODEL_NOT_FOUND = "Model not found exception";
 }

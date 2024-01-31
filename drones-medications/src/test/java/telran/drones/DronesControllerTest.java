@@ -5,199 +5,176 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.util.Arrays;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import telran.drones.api.DronesValidationErrorMessages;
+import telran.drones.api.ServiceExceptionMessages;
+import telran.drones.api.UrlConstants;
 import telran.drones.dto.*;
+import telran.drones.exceptions.*;
+import telran.exceptions.controller.DronesExceptionsController;
 import telran.drones.service.DronesService;
 
-@WebMvcTest // inserting into Application Context Mock WEB server instead of real WebServer
+record DroneDtoWrongEnum(String number, String modelType) {
+
+}
+@WebMvcTest
 class DronesControllerTest {
-
-	private static final String DRONE_ALREADY_EXISTS = "Drone with a given number already exists ";
-	private static final String MEDICATION_ALREADY_EXISTS = "Medication already exists ";
-	private static String WRONG_DRONE_SERIAL_NUMBER = "Drone's serial number must be maximum of 100 characters";
-	private static String WRONG_MEDICATION_NAME = "Medication name must be only letters, numbers, ‘-‘, ‘_’";
-	private static String WRONG_MEDICATION_CODE = "Medication code must be only upper case letters, underscore and numbers";
-	private static String MISSING_DRONE_NUMBER = "Missing drone serial number";
-	private static String MISSING_MEDICATION_NAME = "Missing medication name";
-	private static String MISSING_MEDICATION_CODE = "Missing medication code";
-	private static String MISSING_MEDICATION_WEIGHT = "Missing medication weight";
-	private static String WRONG_MEDICATION_CODE_NUMBER = "ABhdhdh1";
-	private static String WRONG_DRON_SERIAL_NUMBER = "11111111111111111111111111111111111111111111111111111xvxcvxvxvxcvxvxvxvxvxvcxvxvxvxxvx111111111111111111111111111111111111";
-
-	@MockBean // inserting into Application Context Mock instead of real Service
-				// implementation
-	DronesService dronesService;
-	@Autowired // for injection of MockMvc from Application Context
+	@Autowired
 	MockMvc mockMvc;
-	@Autowired // for injection of ObjectMapper from Application context
-	ObjectMapper mapper; // object for getting JSON from object and object from JSON
-
-	DroneDto droneDto = new DroneDto("A12345", ModelType.Lightweight);
-	DroneDto droneDto1 = new DroneDto(WRONG_DRON_SERIAL_NUMBER, ModelType.Lightweight);
-	DroneDto droneDto2 = new DroneDto(null, ModelType.Lightweight);
-	DroneMedication droneMedication = new DroneMedication("A12345", "CODE1");
-	DroneMedication droneMedicationWrongDroneNumber = new DroneMedication(WRONG_DRON_SERIAL_NUMBER, "CODE1");
-	DroneMedication droneMedicationWrongMedicationCode = new DroneMedication("A12345", WRONG_MEDICATION_CODE_NUMBER);
+	@MockBean
+	DronesService dronesService;
+	@Autowired
+	ObjectMapper mapper;
+	private static final String HOST = "http://localhost:8080/";
+	private static final String DRONE_NUMBER_1 = "DRONE-1";
+	private static final String MEDICATION_CODE = "MED_1";
+	static final String URL_DRONE_REGISTER = HOST + UrlConstants.DRONES;
+	private static final String URL_DRONE_LOAD = HOST + UrlConstants.LOAD_DRONE;
+	private static final String CONTROLLER_TEST = "Controller:";
+	DroneDto droneDto1 = new DroneDto(DRONE_NUMBER_1, ModelType.Cruiserweight);
+	DroneDtoWrongEnum droneDtoWrongFields = new DroneDtoWrongEnum(DRONE_NUMBER_1, "KUKU");
+	DroneDto droneDtoMissingFields = new DroneDto(null, null);
+	DroneMedication droneMedication = new DroneMedication(DRONE_NUMBER_1, MEDICATION_CODE);
+	DroneMedication droneMedicationWrongFields = new DroneMedication(new String(new char[1000]), "mED_1");
 	DroneMedication droneMedicationMissingFields = new DroneMedication(null, null);
-	MedicationDto medicationDto = new MedicationDto("ABC1", "medication", 150);
-	MedicationDto medicationDto1 = new MedicationDto(WRONG_MEDICATION_CODE_NUMBER, "medication", 150);
-	MedicationDto medicationDto2 = new MedicationDto("ABC1", "medica@@@tion", 150);
-	MedicationDto medicationDto3 = new MedicationDto(null, null, null);
-	private String[] expectedMedicationMissingFieldsMessages = { MISSING_MEDICATION_CODE, MISSING_MEDICATION_NAME,
-			MISSING_MEDICATION_WEIGHT };
-	private String[] expectedMedicationMissingFieldsMessages1 = { MISSING_DRONE_NUMBER, MISSING_MEDICATION_CODE };
-
-	@Test	
-	void testRegisterDrone() throws Exception {
-		when(dronesService.registerDrone(droneDto)).thenReturn(droneDto);
-		String jsonDroneDto = mapper.writeValueAsString(droneDto);
-		String actualJSON = mockMvc.perform(post("http://localhost:8080/drones").contentType(MediaType.APPLICATION_JSON)
-				.content(jsonDroneDto)).andExpect(status().isOk()).andReturn().getResponse()
-		.getContentAsString();
-		assertEquals(jsonDroneDto, actualJSON );
-	}
-
-	@Test	
-	void testLoadDrone() throws Exception{
-		when(dronesService.loadDrone(droneMedication)).thenReturn(droneMedication);
-		String jsonDroneMedication = mapper.writeValueAsString(droneMedication);
-		String actualJSON = mockMvc.perform(post("http://localhost:8080/drones/load").contentType(MediaType.APPLICATION_JSON)
-				.content(jsonDroneMedication)).andExpect(status().isOk()).andReturn().getResponse()
-		.getContentAsString();
-		assertEquals(jsonDroneMedication, actualJSON );
-	}
-
-	@Test	
-	void testAddMedication() throws Exception{
-		when(dronesService.addMedication(medicationDto)).thenReturn(medicationDto);
-		String jsonMedicationDto = mapper.writeValueAsString(medicationDto);
-		String actualJSON = mockMvc.perform(post("http://localhost:8080/drones/medication").contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMedicationDto)).andExpect(status().isOk()).andReturn().getResponse()
-		.getContentAsString();
-		assertEquals(jsonMedicationDto, actualJSON );
-	}
-
-	/***********
-	 * ALternative flows - Validation Exceptions Handling
-	 * 
-	 * @throws Exception
-	 * @throws UnsupportedEncodingException
-	 *************/
+	String[] errorMessagesDroneWrongFields = {DronesExceptionsController.JSON_TYPE_MISMATCH_MESSAGE};
+	String[] errorMessagesDroneMissingFields = { DronesValidationErrorMessages.MISSING_DRONE_NUMBER,
+			DronesValidationErrorMessages.MISSING_MODEL};
+	String[] errorMessagesDroneMedicationWrongFields = {
+			DronesValidationErrorMessages.DRONE_NUMBER_WRONG_LENGTH,
+			DronesValidationErrorMessages.WRONG_MEDICATION_CODE
+	};
+	String[] errorMessagesDroneMedicationMissingFields = {
+			DronesValidationErrorMessages.MISSING_DRONE_NUMBER,
+			DronesValidationErrorMessages.MISSING_MEDICATION_CODE,
+	};
 	@Test
-	void wrongDroneSerialNumberTest() throws Exception {
-		String jsonDroneDto = mapper.writeValueAsString(droneDto1);
-		String response = mockMvc
-				.perform(post("http://localhost:8080/drones").contentType(MediaType.APPLICATION_JSON)
-						.content(jsonDroneDto))
-				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
-		assertEquals(WRONG_DRONE_SERIAL_NUMBER, response);
-	}
-
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.REGISTER_DRONE_NORMAL)
+		void testDroneRegisterNormal() throws Exception{
+			when(dronesService.registerDrone(droneDto1)).thenReturn(droneDto1);
+			String droneJSON = mapper.writeValueAsString(droneDto1);
+			String response = mockMvc.perform(post(URL_DRONE_REGISTER ).contentType(MediaType.APPLICATION_JSON)
+					.content(droneJSON)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+			assertEquals(droneJSON, response);
+			
+		}
 	@Test
-	void missingDroneSerialNumberTest() throws Exception {
-		String jsonDroneDto = mapper.writeValueAsString(droneDto2);
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.REGISTER_DRONE_MISSING_FIELDS)
+	void testDroneRegisterMissingFields() throws Exception {
+		String droneJSON = mapper.writeValueAsString(droneDtoMissingFields);
 		String response = mockMvc
-				.perform(post("http://localhost:8080/drones").contentType(MediaType.APPLICATION_JSON)
-						.content(jsonDroneDto))
+				.perform(post(URL_DRONE_REGISTER).contentType(MediaType.APPLICATION_JSON).content(droneJSON))
 				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
-		assertEquals(MISSING_DRONE_NUMBER, response);
+		assertErrorMessages(response, errorMessagesDroneMissingFields);
 	}
-
-	@Test
-	void wrongMedicationCode() throws Exception {
-		String jsonDroneDto = mapper.writeValueAsString(medicationDto1);
-		String response = mockMvc
-				.perform(post("http://localhost:8080/drones/medication").contentType(MediaType.APPLICATION_JSON)
-						.content(jsonDroneDto))
-				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
-		assertEquals(WRONG_MEDICATION_CODE, response);
-	}
-
-	@Test
-	void wrongMedicationName() throws Exception {
-		String jsonDroneDto = mapper.writeValueAsString(medicationDto2);
-		String response = mockMvc
-				.perform(post("http://localhost:8080/drones/medication").contentType(MediaType.APPLICATION_JSON)
-						.content(jsonDroneDto))
-				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
-		assertEquals(WRONG_MEDICATION_NAME, response);
-	}
-
-	@Test
-	void wrongDroneMedicationDroneNumber() throws Exception {
-		String jsonDroneMedication = mapper.writeValueAsString(droneMedicationWrongDroneNumber);
-		String response = mockMvc
-				.perform(post("http://localhost:8080/drones/load").contentType(MediaType.APPLICATION_JSON)
-						.content(jsonDroneMedication))
-				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
-		assertEquals(WRONG_DRONE_SERIAL_NUMBER, response);
-	}
-
-	@Test
-	void wrongDroneMedicationCode() throws Exception {
-		String jsonDroneMedication = mapper.writeValueAsString(droneMedicationWrongMedicationCode);
-		String response = mockMvc
-				.perform(post("http://localhost:8080/drones/load").contentType(MediaType.APPLICATION_JSON)
-						.content(jsonDroneMedication))
-				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
-		assertEquals(WRONG_MEDICATION_CODE, response);
-	}
-
-	@Test
-	void loadDroneMedicationMissingFields() throws Exception {
-		String jsonDroneMedication = mapper.writeValueAsString(droneMedicationMissingFields);
-		String response = mockMvc
-				.perform(post("http://localhost:8080/drones/load").contentType(MediaType.APPLICATION_JSON)
-						.content(jsonDroneMedication))
-				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
-		allFieldsMissingTest(expectedMedicationMissingFieldsMessages1, response);
-	}
-
-	@Test
-	void addMedicationMissingFields() throws Exception {
-		String jsonPersonDto = mapper.writeValueAsString(medicationDto3); // conversion from carDto object to string
-																			// JSON
-		String response = mockMvc
-				.perform(post("http://localhost:8080/drones/medication").contentType(MediaType.APPLICATION_JSON)
-						.content(jsonPersonDto))
-				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
-		allFieldsMissingTest(expectedMedicationMissingFieldsMessages, response);
-	}
-
-	private void allFieldsMissingTest(String[] expectedMessages, String response) {
-		Arrays.sort(expectedMessages);
+	private void assertErrorMessages(String response, String[] expectedMessages) {
 		String[] actualMessages = response.split(";");
 		Arrays.sort(actualMessages);
+		Arrays.sort(expectedMessages);
 		assertArrayEquals(expectedMessages, actualMessages);
 	}
-
-	/*********** ALternative flows - Service Exceptions Handling *************/
 	@Test
-	void dronAlreadyExistsTest() throws Exception{
-		when(dronesService.registerDrone(droneDto)).thenThrow(new IllegalStateException(DRONE_ALREADY_EXISTS));
-		String jsonDroneDto = mapper.writeValueAsString(droneDto); //conversion from carDto object to string JSON
-		String response = mockMvc.perform(post("http://localhost:8080/drones").contentType(MediaType.APPLICATION_JSON)
-				.content(jsonDroneDto)).andExpect(status().isBadRequest()).andReturn().getResponse()
-		.getContentAsString();
-		assertEquals(DRONE_ALREADY_EXISTS, response);
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.REGISTER_DRONE_VALIDATION_VIOLATION)
+	void testDronRegisterWrongFields() throws Exception {
+		String droneJSON = mapper.writeValueAsString(droneDtoWrongFields);
+		String response = mockMvc
+				.perform(post(URL_DRONE_REGISTER).contentType(MediaType.APPLICATION_JSON).content(droneJSON))
+				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+		assertErrorMessages(response, errorMessagesDroneWrongFields);
+	}
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.REGISTER_DRONE_ALREADY_EXISTS)
+	void testDroneRegisterAlreadyExists() throws Exception{
+		when(dronesService.registerDrone(droneDto1)).thenThrow(new DroneAlreadyExistException());
+		String droneJSON = mapper.writeValueAsString(droneDto1);
+		String response = mockMvc.perform(post(URL_DRONE_REGISTER ).contentType(MediaType.APPLICATION_JSON)
+				.content(droneJSON)).andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+		assertEquals(ServiceExceptionMessages.DRONE_ALREADY_EXISTS, response);
+		
+	}
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
+	void loadMedicationNormal() throws Exception{
+		when(dronesService.loadDrone(droneMedication)).thenReturn(droneMedication);
+		String logDtoJSON = mapper.writeValueAsString(droneMedication);
+		String droneMedicationJSON = mapper.writeValueAsString(droneMedication);
+		String response = mockMvc.perform(post(URL_DRONE_LOAD).contentType(MediaType.APPLICATION_JSON)
+				.content(droneMedicationJSON)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		assertEquals(logDtoJSON, response);
+		
+	}
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.LOAD_DRONE_MEDICATION_NOT_FOUND)
+	void loadMedicationMedicationNotFound() throws Exception {
+		serviceExceptionRequest(new MedicationNotFoundException(), 404, ServiceExceptionMessages.MEDICATION_NOT_FOUND);
+
+	}
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.LOAD_DRONE_NOT_FOUND)
+	void loadMedicationDroneNotFound() throws Exception {
+		serviceExceptionRequest(new DroneNotFoundException(), 404, ServiceExceptionMessages.DRONE_NOT_FOUND);
+
+	}
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.LOAD_DRONE_LOW_BATTERY_CAPCITY)
+	void loadMedicationLowBatteryCapacity() throws Exception {
+		serviceExceptionRequest(new LowBatteryCapacityException(), 400,
+				ServiceExceptionMessages.LOW_BATTERY_CAPACITY);
+
 	}
 
 	@Test
-	void MedicationAlreadyExistsTest() throws Exception{
-		when(dronesService.addMedication(medicationDto)).thenThrow(new IllegalStateException(MEDICATION_ALREADY_EXISTS));
-		String jsonMedicationDto = mapper.writeValueAsString(medicationDto); //conversion from carDto object to string JSON
-		String response = mockMvc.perform(post("http://localhost:8080/drones/medication").contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMedicationDto)).andExpect(status().isBadRequest()).andReturn().getResponse()
-		.getContentAsString();
-		assertEquals(MEDICATION_ALREADY_EXISTS, response);
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.LOAD_DRONE_NOT_MATCHING_STATE)
+	void loadMedicationNotMatchingState() throws Exception {
+		serviceExceptionRequest(new IllegalDroneStateException(), 400, ServiceExceptionMessages.NOT_IDLE_STATE);
+
+	}
+
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.LOAD_DRONE_NOT_MATCHING_WEIGHT)
+	void loadMedicationNotMatchingWeight() throws Exception {
+		serviceExceptionRequest(new IllegalMedicationWeightException(), 400, ServiceExceptionMessages.WEIGHT_LIMIT_VIOLATION);
+
+	}
+
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.LOAD_DRONE_WRONG_FIELDS)
+	void loadMedicationWrongFields() throws Exception {
+		validationExceptionRequest(errorMessagesDroneMedicationWrongFields, droneMedicationWrongFields);
+	}
+
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.LOAD_DRONE_MISSING_FIELDS)
+	void loadMedicationMissingFields() throws Exception {
+		validationExceptionRequest(errorMessagesDroneMedicationMissingFields, droneMedicationMissingFields);
+	}
+
+	private void serviceExceptionRequest(RuntimeException serviceException, int statusCode, String errorMessage)
+			throws  Exception {
+		when(dronesService.loadDrone(droneMedication)).thenThrow(serviceException);
+		String droneMedicationJSON = mapper.writeValueAsString(droneMedication);
+		String response = mockMvc.perform(post(URL_DRONE_LOAD ).contentType(MediaType.APPLICATION_JSON)
+				.content(droneMedicationJSON)).andExpect(status().is(statusCode)).andReturn().getResponse().getContentAsString();
+		assertEquals(errorMessage, response);
+	}
+	private void validationExceptionRequest(String[] errorMessages, DroneMedication droneMedicationDto)
+			throws Exception {
+		String droneMedicationJSON = mapper.writeValueAsString(droneMedicationDto);
+		String response = mockMvc
+				.perform(post(URL_DRONE_LOAD).contentType(MediaType.APPLICATION_JSON).content(droneMedicationJSON))
+				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+		assertErrorMessages(response, errorMessages);
 	}
 }

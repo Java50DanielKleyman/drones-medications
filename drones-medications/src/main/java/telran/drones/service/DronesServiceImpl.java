@@ -3,111 +3,107 @@ package telran.drones.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import telran.drones.dto.DroneDto;
-import telran.drones.dto.DroneMedication;
-import telran.drones.dto.MedicationDto;
-import telran.drones.dto.State;
+import telran.drones.api.PropertiesNames;
+import telran.drones.dto.*;
 import telran.drones.exceptions.*;
+
 import telran.drones.model.*;
 import telran.drones.repo.*;
-
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@EnableScheduling
 public class DronesServiceImpl implements DronesService {
-	final DroneRepo droneRepo;
-	final DroneModelRepo droneModelRepo;
-	final EventLogRepo eventLogRepo;
+	final DronesRepo droneRepo;
 	final MedicationRepo medicationRepo;
+	final EventLogRepo logRepo;
+	final DronesModelRepo droneModelRepo;
+	@Value("${" + PropertiesNames.CAPACITY_THRESHOLD + ":25}")
+	int capacityThreshold;
+	
 
 	@Override
 	@Transactional
 	public DroneDto registerDrone(DroneDto droneDto) {
+		log.debug("service got drone DTO: {}", droneDto);
 		if (droneRepo.existsById(droneDto.number())) {
-			throw new DroneIllegalStateException();
+			throw new DroneAlreadyExistException();
 		}
 		Drone drone = Drone.of(droneDto);
-		DroneModel model = droneModelRepo.findById(droneDto.modelType())
-				.orElseThrow(() -> new DroneModelNotFoundException());
-		drone.setModel(model);
+		
+		DroneModel droneModel = droneModelRepo.findById(droneDto.modelType())
+				.orElseThrow(() -> new ModelNotFoundException());
+		drone.setModel(droneModel);
+		log.debug("drone object is {}", drone);
 		droneRepo.save(drone);
-		log.debug("Drone {} has been registered", drone);
 		return droneDto;
 	}
 
 	@Override
+	@Transactional(readOnly = false)
 	public DroneMedication loadDrone(DroneMedication droneMedication) {
-		if (!droneRepo.existsById(droneMedication.droneNumber())) {
-			throw new DroneNotFoundException();
+		String droneNumber = droneMedication.droneNumber();
+		String medicationCode = droneMedication.medicationCode();
+		log.debug("received: droneNumber={}, medicationCode={}",droneNumber ,
+				droneMedication.medicationCode());
+		log.debug("capacity threshold is {}", capacityThreshold);
+		Drone drone = droneRepo.findById(droneNumber).orElseThrow(() -> new DroneNotFoundException());
+		log.debug("found drone: {}", drone);
+		Medication medication = medicationRepo.findById(medicationCode)
+				.orElseThrow(() -> new MedicationNotFoundException());
+		log.debug("found medication: {}", medication);
+		if (drone.getState() != State.IDLE) {
+			throw new IllegalDroneStateException();
 		}
-		if (!medicationRepo.existsById(droneMedication.medicationCode())) {
-			throw new MedicationNotFoundException();
+
+		if (drone.getBatteryCapacity() < capacityThreshold) {
+			throw new LowBatteryCapacityException();
 		}
-		Drone drone = droneRepo.findById(droneMedication.droneNumber()).orElseThrow(() -> new DroneNotFoundException());
-		if (drone.getBatteryCapacity() < 25) {
-			throw new BatteryIllegalStateException();
-		}
-		if (!drone.getState().equals(State.IDLE)) {
-			throw new StateIllegalStateException();
+		if (drone.getModel().getWeight() < medication.getWeight()) {
+			throw new IllegalMedicationWeightException();
 		}
 		drone.setState(State.LOADING);
+		//EventLog(LocalDateTime timestamp, String droneNumber, State state, int batteryCapacity) 
 		EventLog eventLog = new EventLog(LocalDateTime.now(), drone.getNumber(), drone.getState(),
-				drone.getBatteryCapacity());
-		droneRepo.save(drone);
-		eventLogRepo.save(eventLog);
-		log.debug("Event log {} created, drone {} state updated to LOADING", eventLog, drone);
+				drone.getBatteryCapacity(), medicationCode);
+		logRepo.save(eventLog);
+		
+		log.debug("saved log: {}", eventLog);
+
 		return droneMedication;
-
 	}
 
 	@Override
-	public MedicationDto addMedication(MedicationDto medicationDto) {
+	public List<String> checkMedicationItems(String droneNumber) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<Medication> checkLoadedMedicationItems(Drone drone) {
+	public List<String> checkAvailableDrones() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<Drone> checkAvailableDrones() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int checkDroneBatteryLevel(Drone drone) {
+	public int checkBatteryCapacity(String droneNumber) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public EventLog checkEventLog(Drone drone) {
+	public DroneItemsAmount checkDroneLoadedItemAmounts() {
 		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Map<String, Long> checkAmountOfMedicationForEachDrone(List<DroneMedication> droneMedicationList) {
-//		  Map<String, Long> medicationCountByDrone = droneMedicationList.stream()
-//	                .collect(Collectors.groupingBy(DroneMedication::getDroneNumber, Collectors.counting()));
-//
-//	        // Sorting the map by the count in descending order
-//	        medicationCountByDrone = medicationCountByDrone.entrySet().stream()
-//	                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-//	                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 		return null;
 	}
 
