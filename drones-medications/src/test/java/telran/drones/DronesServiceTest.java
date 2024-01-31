@@ -56,6 +56,7 @@ class DronesServiceTest {
 			new EventLog(LocalDateTime.now(), DRONE3, State.LOADING, 50, MED2) };
 	DroneMedication droneMedication1 = new DroneMedication(DRONE1, MED1);
 	List<String> expected = Arrays.asList(MED3, MED2, MED1);
+	List<String> expected1 = Arrays.asList(DRONE1, DRONE2);
 
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
@@ -122,6 +123,13 @@ class DronesServiceTest {
 	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_DRONE_NOT_FOUND)
 	void checkMedicalItemsDroneNotFound() {
 		assertThrowsExactly(DroneNotFoundException.class, () -> dronesService.checkMedicationItems(DRONE4));
+	}
+
+	@Test
+	@DisplayName(SERVICE_TEST + TestDisplayNames.AVAILABLE_DRONES)
+	void checkAvailableForLoadingDrones() {
+		List<String> actual = dronesService.checkAvailableDrones();
+		assertEquals(expected1, actual);
 	}
 
 }

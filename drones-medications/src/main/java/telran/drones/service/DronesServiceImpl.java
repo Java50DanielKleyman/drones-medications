@@ -95,8 +95,8 @@ public class DronesServiceImpl implements DronesService {
 
 	@Override
 	public List<String> checkAvailableDrones() {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return droneRepo.findDronesByState(State.IDLE);
 	}
 
 	@Override
