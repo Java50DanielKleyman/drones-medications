@@ -114,7 +114,8 @@ public class DronesServiceImpl implements DronesService {
 	@Override
 	public List<DroneItemsAmount> checkDroneLoadedItemAmounts() {
 		List<DroneItemsAmount> droneItemsAmount = logRepo.findDroneLoadedItemAmount(State.LOADING);
-		return null;
+		log.debug("Loaded amount of items for each drone is: {}", droneItemsAmount);
+		return droneItemsAmount;
 	}
 
 }

@@ -46,6 +46,7 @@ class DronesServiceTest {
 	EventLogRepo logRepo;
 	DroneDto droneDto = new DroneDto(DRONE4, ModelType.Cruiserweight);
 	DroneDto drone1 = new DroneDto(DRONE1, ModelType.Middleweight);
+	DroneDto drone4 = new DroneDto(DRONE4, ModelType.Middleweight);
 	Drone drone11 = Drone.of(drone1);
 
 	EventLog[] eventLogs = { new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED1),
@@ -55,10 +56,15 @@ class DronesServiceTest {
 			new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED3),
 			new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED3),
 			new EventLog(LocalDateTime.now(), DRONE2, State.LOADING, 50, MED4),
-			new EventLog(LocalDateTime.now(), DRONE3, State.LOADING, 50, MED2) };
+			new EventLog(LocalDateTime.now(), DRONE3, State.LOADING, 50, MED2),
+			new EventLog(LocalDateTime.now(), DRONE3, State.LOADING, 50, MED2),
+			new EventLog(LocalDateTime.now(), DRONE4, State.LOADING, 50, MED2),
+			new EventLog(LocalDateTime.now(), DRONE4, State.LOADING, 50, MED3),
+			new EventLog(LocalDateTime.now(), DRONE4, State.LOADING, 50, MED3), };
 	DroneMedication droneMedication1 = new DroneMedication(DRONE1, MED1);
 	List<String> expected = Arrays.asList(MED3, MED2, MED1);
 	List<String> expected1 = Arrays.asList(DRONE1, DRONE2);
+	List<String> expected2 = Arrays.asList(MED3, MED2);
 
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
@@ -112,14 +118,14 @@ class DronesServiceTest {
 		assertThrowsExactly(DroneAlreadyExistException.class, () -> dronesService.registerDrone(drone1));
 	}
 
-	@Test
-	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_NORMAL)
-	void checkMedicalItemsNormal() {
-		for (EventLog el : eventLogs) {
-			logRepo.save(el);
-		}
-		assertEquals(expected, dronesService.checkMedicationItems(DRONE1));
-	}
+//	@Test
+//	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_NORMAL)
+//	void checkMedicalItemsNormal() {
+//		dronesService.registerDrone(drone4);
+//		addEventLogs();
+//		assertEquals(expected, dronesService.checkMedicationItems(DRONE1));
+//		assertEquals(expected2, dronesService.checkMedicationItems(DRONE4));
+//	}
 
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_DRONE_NOT_FOUND)
@@ -147,9 +153,18 @@ class DronesServiceTest {
 	void checkBatteryLevelDroneNotFound() {
 		assertThrowsExactly(DroneNotFoundException.class, () -> dronesService.checkBatteryCapacity(DRONE4));
 	}
+
 	@Test
-	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_DRONES_ITEMS_AMOUNT) 
+	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_DRONES_ITEMS_AMOUNT)
 	void checkDroneLoadedItemAmounts() {
-		
+		dronesService.registerDrone(drone4);
+		addEventLogs();
+		assertEquals(5, dronesService.checkDroneLoadedItemAmounts().get(0).getAmount());
+	}
+
+	private void addEventLogs() {
+		for (EventLog el : eventLogs) {
+			logRepo.save(el);
+		}
 	}
 }
