@@ -1,4 +1,5 @@
 package telran.drones;
+
 import telran.drones.api.*;
 import telran.drones.dto.*;
 import telran.drones.model.*;
@@ -6,9 +7,11 @@ import telran.drones.exceptions.*;
 
 import telran.drones.repo.*;
 import telran.drones.service.DronesService;
+import telran.drones.service.DronesServiceImpl;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -16,9 +19,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
+
+import lombok.extern.slf4j.Slf4j;
+
 @SpringBootTest
 @Sql(scripts = "classpath:test_data.sql")
-
+@Slf4j
 class DronesServiceTest {
 	private static final String DRONE1 = "Drone-1";
 	private static final String DRONE2 = "Drone-2";
@@ -28,25 +34,25 @@ class DronesServiceTest {
 	private static final String MED2 = "MED_2";
 	private static final String MED3 = "MED_3";
 	private static final String MED4 = "MED_4";
-	private static final String SERVICE_TEST = "Service: ";	
-	
+	private static final String SERVICE_TEST = "Service: ";
+
 	@Autowired
- DronesService dronesService;
+	DronesService dronesService;
 	@Autowired
 	DronesRepo droneRepo;
 	@Autowired
 	EventLogRepo logRepo;
 	DroneDto droneDto = new DroneDto(DRONE4, ModelType.Cruiserweight);
 	DroneDto drone1 = new DroneDto(DRONE1, ModelType.Middleweight);
-	DroneMedication droneMedication1 = new DroneMedication(DRONE1, MED1);	
-	DroneMedication droneMedication2 = new DroneMedication(DRONE1, MED2);
-	DroneMedication droneMedication3 = new DroneMedication(DRONE1, MED2);
-	DroneMedication droneMedication4 = new DroneMedication(DRONE1, MED3);
-	DroneMedication droneMedication5 = new DroneMedication(DRONE1, MED3);
-	DroneMedication droneMedication6 = new DroneMedication(DRONE1, MED3);
-	DroneMedication droneMedication7 = new DroneMedication(DRONE2, MED4);
-	DroneMedication droneMedication8 = new DroneMedication(DRONE3, MED2);
-			
+	DroneMedication[] medications = { new DroneMedication(DRONE1, MED1), new DroneMedication(DRONE1, MED2),
+			new DroneMedication(DRONE1, MED2), new DroneMedication(DRONE1, MED3), new DroneMedication(DRONE1, MED3),
+			new DroneMedication(DRONE1, MED3), new DroneMedication(DRONE2, MED4), new DroneMedication(DRONE3, MED2) };
+	DroneMedication droneMedication1 = new DroneMedication(DRONE1, MED1);
+	DroneMedication[] droneMedications = { new DroneMedication(DRONE1, MED1), new DroneMedication(DRONE1, MED2),
+			new DroneMedication(DRONE1, MED2), new DroneMedication(DRONE1, MED3), new DroneMedication(DRONE1, MED3),
+			new DroneMedication(DRONE1, MED3), new DroneMedication(DRONE2, MED4), new DroneMedication(DRONE3, MED2) };
+	List<String> expected = Arrays.asList("MED3", "MED2", "MED1");
+
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
 	void loadDroneNormal() {
@@ -63,37 +69,61 @@ class DronesServiceTest {
 		Drone drone = droneRepo.findById(DRONE1).orElseThrow();
 		assertEquals(State.LOADING, drone.getState());
 	}
+
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NOT_MATCHING_STATE)
 	void loadDroneWrongState() {
 		assertThrowsExactly(IllegalDroneStateException.class,
 				() -> dronesService.loadDrone(new DroneMedication(DRONE3, MED1)));
 	}
+
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_MEDICATION_NOT_FOUND)
 	void loadDroneMedicationNotFound() {
 		assertThrowsExactly(MedicationNotFoundException.class,
 				() -> dronesService.loadDrone(new DroneMedication(DRONE1, "KUKU")));
 	}
+
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NOT_FOUND)
 	void loadDroneNotFound() {
 		assertThrowsExactly(DroneNotFoundException.class,
 				() -> dronesService.loadDrone(new DroneMedication(DRONE4, MED1)));
 	}
+
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.REGISTER_DRONE_NORMAL)
 	void registerDroneNormal() {
 		assertEquals(droneDto, dronesService.registerDrone(droneDto));
 		assertTrue(droneRepo.existsById(DRONE4));
-		
+
 	}
+
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.REGISTER_DRONE_ALREADY_EXISTS)
 	void registerDroneAlreadyExists() {
-		assertThrowsExactly(DroneAlreadyExistException.class,
-				() -> dronesService.registerDrone(drone1));
+		assertThrowsExactly(DroneAlreadyExistException.class, () -> dronesService.registerDrone(drone1));
 	}
+
 	@Test
-	@DisplayName(SERVICE_TEST + TestDisplayNames.
+	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_NORMAL)
+	void checkMedicalItemsNormal() {		
+		loadDroneMedications();
+		assertEquals(expected, dronesService.checkMedicationItems(DRONE1));
+	}
+
+	private void loadDroneMedications() {	
+		 for (DroneMedication dm : droneMedications) {
+		        Drone drone = droneRepo.findById(dm.droneNumber()).orElseThrow(() -> new DroneNotFoundException());
+		        log.debug("Before loading - state of drone {}: {}", dm.droneNumber(), drone.getState());
+		        drone.setState(State.IDLE);
+		        log.debug("After setting to IDLE - state of drone {}: {}", dm.droneNumber(), drone.getState());
+		        dronesService.loadDrone(dm);
+		        log.debug("After loading - state of drone {}: {}", dm.droneNumber(), drone.getState());
+		        drone.setState(State.IDLE);
+		        log.debug("After setting back to IDLE - state of drone {}: {}", dm.droneNumber(), drone.getState());
+		    }
+
+	}
+
 }
