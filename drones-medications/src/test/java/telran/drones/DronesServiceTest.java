@@ -147,4 +147,9 @@ class DronesServiceTest {
 	void checkBatteryLevelDroneNotFound() {
 		assertThrowsExactly(DroneNotFoundException.class, () -> dronesService.checkBatteryCapacity(DRONE4));
 	}
+	@Test
+	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_DRONES_ITEMS_AMOUNT) 
+	void checkDroneLoadedItemAmounts() {
+		
+	}
 }
