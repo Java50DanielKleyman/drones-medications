@@ -13,4 +13,8 @@ public interface DronesRepo extends JpaRepository<Drone, String> {
 			select number from Drone where state= :state
 			""")
 	List<String> findDronesByState(State state);
+	@Query("""
+			select batteryCapacity from Drone where number= :number
+			""")
+	int findBatteryCapacityByNumber(String number);
 }

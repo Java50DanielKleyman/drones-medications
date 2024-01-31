@@ -46,6 +46,8 @@ class DronesServiceTest {
 	EventLogRepo logRepo;
 	DroneDto droneDto = new DroneDto(DRONE4, ModelType.Cruiserweight);
 	DroneDto drone1 = new DroneDto(DRONE1, ModelType.Middleweight);
+	Drone drone11 = Drone.of(drone1);
+
 	EventLog[] eventLogs = { new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED1),
 			new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED2),
 			new EventLog(LocalDateTime.now(), DRONE1, State.LOADING, 50, MED2),
@@ -132,4 +134,17 @@ class DronesServiceTest {
 		assertEquals(expected1, actual);
 	}
 
+	@Test
+	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_BATTERY_LEVEL_NORMAL)
+	void checkBatteryLevelNormal() {
+		assertEquals(drone11.getBatteryCapacity(), dronesService.checkBatteryCapacity(drone11.getNumber()));
+		Drone drone = droneRepo.findById(DRONE2).orElseThrow(() -> new ModelNotFoundException());
+		assertEquals(drone.getBatteryCapacity(), dronesService.checkBatteryCapacity(drone.getNumber()));
+	}
+
+	@Test
+	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_BATTERY_LEVEL_DRONE_NOT_FOUND)
+	void checkBatteryLevelDroneNotFound() {
+		assertThrowsExactly(DroneNotFoundException.class, () -> dronesService.checkBatteryCapacity(DRONE4));
+	}
 }

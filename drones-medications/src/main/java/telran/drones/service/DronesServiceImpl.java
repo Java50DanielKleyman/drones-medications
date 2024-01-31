@@ -95,19 +95,25 @@ public class DronesServiceImpl implements DronesService {
 
 	@Override
 	public List<String> checkAvailableDrones() {
-		
-		return droneRepo.findDronesByState(State.IDLE);
+		List<String> availableDrones = droneRepo.findDronesByState(State.IDLE);
+		log.debug("availables drones are {}", availableDrones);
+		return availableDrones;
 	}
 
 	@Override
 	public int checkBatteryCapacity(String droneNumber) {
-		// TODO Auto-generated method stub
-		return 0;
+		log.debug("received: droneNumber={}", droneNumber);
+		if (!droneRepo.existsById(droneNumber)) {
+			throw new DroneNotFoundException();
+		}
+		int batteryCapacity = droneRepo.findBatteryCapacityByNumber(droneNumber);
+		log.debug("Batery capacity for drone number {} is {}", droneNumber, batteryCapacity);
+		return batteryCapacity;
 	}
 
 	@Override
 	public DroneItemsAmount checkDroneLoadedItemAmounts() {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
