@@ -31,6 +31,7 @@ class DronesServiceTest {
 	private static final String DRONE2 = "Drone-2";
 	private static final String DRONE3 = "Drone-3";
 	private static final String DRONE4 = "Drone-4";
+
 	private static final String MED1 = "MED_1";
 	private static final String MED2 = "MED_2";
 	private static final String MED3 = "MED_3";
@@ -115,6 +116,12 @@ class DronesServiceTest {
 			logRepo.save(el);
 		}
 		assertEquals(expected, dronesService.checkMedicationItems(DRONE1));
+	}
+
+	@Test
+	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_DRONE_NOT_FOUND)
+	void checkMedicalItemsDroneNotFound() {
+		assertThrowsExactly(DroneNotFoundException.class, () -> dronesService.checkMedicationItems(DRONE4));
 	}
 
 }
