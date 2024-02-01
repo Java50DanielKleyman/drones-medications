@@ -71,8 +71,6 @@ public class DronesServiceImpl implements DronesService {
 			throw new IllegalMedicationWeightException();
 		}
 		drone.setState(State.LOADING);
-		// EventLog(LocalDateTime timestamp, String droneNumber, State state, int
-		// batteryCapacity)
 		EventLog eventLog = new EventLog(LocalDateTime.now(), drone.getNumber(), drone.getState(),
 				drone.getBatteryCapacity(), medicationCode);
 		logRepo.save(eventLog);
