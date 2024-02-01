@@ -56,6 +56,7 @@ class DronesControllerTest {
 	private static final String URL_CHECK_BATERY_CAPACITY = HOST + UrlConstants.CHECK_BATERY_CAPACITY;
 	private static final String URL_CHECK_DRONE_LOADED_ITEM_AMOUNT = HOST + UrlConstants.CHECK_DRONE_LOADED_ITEM_AMOUNT;
 	private static final String CONTROLLER_TEST = "Controller:";
+	private static final String DRONE_NOT_FOUND = ServiceExceptionMessages.DRONE_NOT_FOUND;
 	DroneDto droneDto1 = new DroneDto(DRONE_NUMBER_1, ModelType.Cruiserweight);
 	DroneDtoWrongEnum droneDtoWrongFields = new DroneDtoWrongEnum(DRONE_NUMBER_1, "KUKU");
 	DroneDto droneDtoMissingFields = new DroneDto(null, null);
@@ -239,4 +240,13 @@ class DronesControllerTest {
 		
 	}
 
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_MED_ITEMS_DRONE_NOT_FOUND)
+	void checkMedicationItemsDroneNotFound() throws Exception {
+		when(dronesService.checkMedicationItems(DRONE_NUMBER_1)).thenThrow(new DroneNotFoundException());	
+		String response = mockMvc
+				.perform(get("http://localhost:8080/drones/checkMedicationItems/" + DRONE_NUMBER_1))
+				.andExpect(status().isNotFound()).andReturn().getResponse().getContentAsString();
+		assertEquals(DRONE_NOT_FOUND, response);
+	}
 }
