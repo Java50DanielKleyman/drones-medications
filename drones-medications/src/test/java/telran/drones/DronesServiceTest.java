@@ -1,13 +1,12 @@
 package telran.drones;
 
-import telran.drones.api.*;
+
 import telran.drones.dto.*;
 import telran.drones.model.*;
 import telran.drones.exceptions.*;
 
 import telran.drones.repo.*;
 import telran.drones.service.DronesService;
-import telran.drones.service.DronesServiceImpl;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,13 +18,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.jdbc.Sql;
-
-import lombok.extern.slf4j.Slf4j;
 
 @SpringBootTest
-@Sql(scripts = "classpath:test_data.sql")
-@Slf4j
+
 class DronesServiceTest {
 	private static final String DRONE1 = "Drone-1";
 	private static final String DRONE2 = "Drone-2";
@@ -118,14 +113,14 @@ class DronesServiceTest {
 		assertThrowsExactly(DroneAlreadyExistException.class, () -> dronesService.registerDrone(drone1));
 	}
 
-//	@Test
-//	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_NORMAL)
-//	void checkMedicalItemsNormal() {
-//		dronesService.registerDrone(drone4);
-//		addEventLogs();
-//		assertEquals(expected, dronesService.checkMedicationItems(DRONE1));
-//		assertEquals(expected2, dronesService.checkMedicationItems(DRONE4));
-//	}
+	@Test
+	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_NORMAL)
+	void checkMedicalItemsNormal() {
+		dronesService.registerDrone(drone4);
+		addEventLogs();
+		assertEquals(expected, dronesService.checkMedicationItems(DRONE1));
+		assertEquals(expected2, dronesService.checkMedicationItems(DRONE4));
+	}
 
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_MED_ITEMS_DRONE_NOT_FOUND)
@@ -157,9 +152,8 @@ class DronesServiceTest {
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_DRONES_ITEMS_AMOUNT)
 	void checkDroneLoadedItemAmounts() {
-		dronesService.registerDrone(drone4);
 		addEventLogs();
-		assertEquals(5, dronesService.checkDroneLoadedItemAmounts().get(0).getAmount());
+		assertEquals(6, dronesService.checkDroneLoadedItemAmounts().get(0).getAmount());
 	}
 
 	private void addEventLogs() {

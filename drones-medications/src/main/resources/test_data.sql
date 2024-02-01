@@ -17,4 +17,3 @@ insert into medications (code, name, weight)
 	values 
 		('MED_1', 'Medication-1', 200),
 		('MED_2', 'Medication-2', 350)	;
-		
