@@ -70,6 +70,8 @@ class DronesControllerTest {
 			DronesValidationErrorMessages.MISSING_MEDICATION_CODE, };
 	List<String> expected = Arrays.asList(MEDICATION_CODE3, MEDICATION_CODE2, MEDICATION_CODE);
 	List<String> expectedAvailableDrones = Arrays.asList(DRONE_NUMBER_1, DRONE_NUMBER_1);
+	List<DroneItemsAmount> expectedDroneItemsAmount = Arrays.asList(new DroneItemsAmountImpl(DRONE_NUMBER_1, 10),
+			new DroneItemsAmountImpl(DRONE_NUMBER_2, 10));
 
 	@Test
 	@DisplayName(CONTROLLER_TEST + TestDisplayNames.REGISTER_DRONE_NORMAL)
@@ -198,6 +200,27 @@ class DronesControllerTest {
 		assertErrorMessages(response, errorMessages);
 	}
 
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.AVAILABLE_DRONES)
+	void checkAvailableDrones() throws Exception {
+		when(dronesService.checkAvailableDrones()).thenReturn(expectedAvailableDrones);	
+		String response = mockMvc
+				.perform(get(URL_CHECK_AVAILABLE_DRONES).contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		assertEquals(response, mapper.writeValueAsString(expectedAvailableDrones));
+		
+	}
+
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_DRONES_ITEMS_AMOUNT)
+	void checkDroneLoadedItemAmounts() throws Exception {
+		when(dronesService.checkDroneLoadedItemAmounts()).thenReturn(expectedDroneItemsAmount);	
+		String response = mockMvc
+				.perform(get(URL_CHECK_DRONE_LOADED_ITEM_AMOUNT).contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		assertEquals(response, mapper.writeValueAsString(expectedDroneItemsAmount));
+		
+	}
 //	@Test
 	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_MED_ITEMS_NORMAL)
 	void checkMedicationItems() throws Exception {
@@ -210,14 +233,5 @@ class DronesControllerTest {
 		
 	}
 
-	@Test
-	@DisplayName(CONTROLLER_TEST + TestDisplayNames.AVAILABLE_DRONES)
-	void checkAvailableDrones() throws Exception {
-		when(dronesService.checkAvailableDrones()).thenReturn(expectedAvailableDrones);	
-		String response = mockMvc
-				.perform(get(URL_CHECK_AVAILABLE_DRONES).contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-		assertEquals(response, mapper.writeValueAsString(expectedAvailableDrones));
-		
-	}
+	
 }
