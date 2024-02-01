@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -221,17 +222,21 @@ class DronesControllerTest {
 		assertEquals(response, mapper.writeValueAsString(expectedDroneItemsAmount));
 		
 	}
-//	@Test
+
+	@Test
 	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_MED_ITEMS_NORMAL)
 	void checkMedicationItems() throws Exception {
-		when(dronesService.checkMedicationItems(DRONE_NUMBER_1)).thenReturn(expected);
-		String checkMedItemsJson = mapper.writeValueAsString(DRONE_NUMBER_1);
+		when(dronesService.checkMedicationItems(DRONE_NUMBER_1)).thenReturn(expected);		
 		String response = mockMvc
-				.perform(get(URL_CHECK_MEDICATION_ITEMS).contentType(MediaType.APPLICATION_JSON).content(checkMedItemsJson))
+				.perform(get("http://localhost:8080/drones/checkMedicationItems/" + DRONE_NUMBER_1))
 				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		
+//		String response = mockMvc
+//				.perform(get(URL_CHECK_MEDICATION_ITEMS + DRONE_NUMBER_1))
+//				.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+
 		assertEquals(response, mapper.writeValueAsString(expected));
 		
 	}
 
-	
 }
