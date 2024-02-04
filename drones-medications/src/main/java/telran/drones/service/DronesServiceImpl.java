@@ -126,7 +126,7 @@ public class DronesServiceImpl implements DronesService {
 	}
 
 	@Transactional(readOnly = false)
-	@Scheduled(fixedDelay = 1000)
+	@Scheduled(fixedDelay = 3000)
 	public void dronesControl() {
 		List<Drone> dronesList = droneRepo.findAll();
 		for (Drone drone : dronesList) {

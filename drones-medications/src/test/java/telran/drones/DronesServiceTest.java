@@ -155,11 +155,15 @@ class DronesServiceTest {
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.DRONES_CONTROL)
 	void dronesControlPeriodicTask() throws InterruptedException {
+		int batteryCapacity = 100;
 		dronesService.loadDrone(droneMedication1);
-		Thread.sleep(20000);
+		Thread.sleep(40000);
 		List<EventLog> listOfLogs = logRepo.findAllByDroneNumberOrderByTimestampAsc(DRONE1);
 		for (int i = 0; i < ALL_STATES.size(); i++) {
-			assertEquals(ALL_STATES.get(i), listOfLogs.get(i).getState());
+			assertEquals(ALL_STATES.get(i), listOfLogs.get(i).getState());			
+			assertEquals(batteryCapacity, listOfLogs.get(i).getBatteryCapacity());
+			batteryCapacity -=2;
 		}
+		
 	}
 }
