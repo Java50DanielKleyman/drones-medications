@@ -1,11 +1,12 @@
 package telran.drones.api;
 
 public interface UrlConstants {
-
 	String DRONES = "drones";
 	String LOAD_DRONE = DRONES + "/load";
-	String CHECK_MEDICATION_ITEMS = DRONES + "/checkMedicationItems/{droneNumber}";
-	String CHECK_AVAILABLE_DRONES = DRONES + "/checkAvailableDrones";
-	String CHECK_BATERY_CAPACITY = DRONES + "/checkBatteryCapacity/{droneNumber}";
-	String CHECK_DRONE_LOADED_ITEM_AMOUNT = DRONES + "/checkDroneLoadedItemAmounts";
+	String DRONE_NUMBER = "droneNumber";
+	String DRONE_MEDICATION_ITEMS = DRONES + "/items/" ;
+	String AVAILABLE_DRONES = DRONES + "/available";
+	String DRONE_BATTERY_CAPACITY = DRONES + "/battery/";
+	String DRONES_AMOUNT_ITEMS = DRONES + "/amount/items";
+
 }

@@ -8,25 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import telran.drones.dto.DroneItemsAmount;
 import telran.drones.dto.State;
 import telran.drones.model.*;
+import telran.drones.projections.MedicationCode;
 
 public interface EventLogRepo extends JpaRepository<EventLog, Long> {
-	@Query("""
-			select medicationCode
-			from EventLog
-			where droneNumber= :droneNumber
-			and state= :state
-			group by medicationCode
-			order by count(*) desc
-
-			""")
-	List<String> findMedicationsByDroneNumber(String droneNumber, State state);
-
-	@Query("""
-			select droneNumber as number, count(*) as amount
-			from EventLog
-			where state= :state
-			group by droneNumber
-			order by count(*) desc
-			""")
-	List<DroneItemsAmount> findDroneLoadedItemAmount(State state);
+	
+		List<MedicationCode> findByDroneNumberAndState(String droneNumber, State state);
+	@Query(value="select d.drone_number as number, count(el.drone_number) as amount"
+			+ " from event_logs el right join drones d on "
+			+ "el.drone_number=d.drone_number group by d.drone_number"
+			+ " order by count(el.drone_number) desc", nativeQuery=true)
+		List<DroneItemsAmount> getItemAmounts();
 }

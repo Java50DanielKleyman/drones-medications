@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,26 +14,32 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import telran.drones.api.PropertiesNames;
+import telran.drones.configuration.DronesConfiguration;
 import telran.drones.dto.*;
 import telran.drones.exceptions.*;
 
 import telran.drones.model.*;
+import telran.drones.projections.DroneNumber;
+import telran.drones.projections.MedicationCode;
 import telran.drones.repo.*;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@EnableScheduling
+@Transactional(readOnly = true)
 public class DronesServiceImpl implements DronesService {
 	final DronesRepo droneRepo;
 	final MedicationRepo medicationRepo;
 	final EventLogRepo logRepo;
 	final DronesModelRepo droneModelRepo;
+	final Map<State, State> statesMachine;
 	@Value("${" + PropertiesNames.CAPACITY_THRESHOLD + ":25}")
 	int capacityThreshold;
+	@Autowired
+	DronesConfiguration dronesConfiguration;
 
 	@Override
-	@Transactional
+	@Transactional(readOnly = false)
 	public DroneDto registerDrone(DroneDto droneDto) {
 		log.debug("service got drone DTO: {}", droneDto);
 		if (droneRepo.existsById(droneDto.number())) {
@@ -82,38 +89,71 @@ public class DronesServiceImpl implements DronesService {
 
 	@Override
 	public List<String> checkMedicationItems(String droneNumber) {
-		log.debug("received: droneNumber={}", droneNumber);
 		if (!droneRepo.existsById(droneNumber)) {
 			throw new DroneNotFoundException();
 		}
-		List<String> medicationItems = logRepo.findMedicationsByDroneNumber(droneNumber, State.LOADING);
-		log.debug("found list of medication items: {} for droneNumber: {}", medicationItems, droneNumber);
-		return medicationItems;
+		List<MedicationCode> codes = logRepo.findByDroneNumberAndState(droneNumber, State.LOADING);
+		List<String> res = codes.stream().map(MedicationCode::getMedicationCode).toList();
+		log.debug("Loaded medication items on drone {} are {} ", droneNumber, res);
+		return res;
 	}
 
 	@Override
 	public List<String> checkAvailableDrones() {
-		List<String> availableDrones = droneRepo.findDronesByState(State.IDLE);
-		log.debug("availables drones are {}", availableDrones);
-		return availableDrones;
+		List<DroneNumber> numbers = droneRepo.findByStateAndBatteryCapacityGreaterThanEqual(State.IDLE,
+				capacityThreshold);
+		List<String> res = numbers.stream().map(DroneNumber::getNumber).toList();
+		log.debug("Available drones are {}", res);
+		return res;
 	}
 
 	@Override
 	public int checkBatteryCapacity(String droneNumber) {
-		log.debug("received: droneNumber={}", droneNumber);
-		if (!droneRepo.existsById(droneNumber)) {
+		Integer batteryCapacity = droneRepo.findBatteryCapacity(droneNumber);
+		if (batteryCapacity == null) {
 			throw new DroneNotFoundException();
 		}
-		int batteryCapacity = droneRepo.findBatteryCapacityByNumber(droneNumber);
-		log.debug("Batery capacity for drone number {} is {}", droneNumber, batteryCapacity);
+
+		log.debug("battery capacity of drone {} is {}", droneNumber, batteryCapacity);
 		return batteryCapacity;
 	}
 
 	@Override
 	public List<DroneItemsAmount> checkDroneLoadedItemAmounts() {
-		List<DroneItemsAmount> droneItemsAmount = logRepo.findDroneLoadedItemAmount(State.LOADING);
-		log.debug("Loaded amount of items for each drone is: {}", droneItemsAmount);
-		return droneItemsAmount;
+		List<DroneItemsAmount> res = logRepo.getItemAmounts();
+		res.forEach(dia -> log.trace("drone {}, items amount {}", dia.getNumber(), dia.getAmount()));
+		return res;
 	}
 
+	@Scheduled(fixedDelay = 2000)
+	public void dronesControl() {
+		List<Drone> dronesList = droneRepo.findAll();
+		for (Drone drone : dronesList) {
+			if (drone.getState() == State.IDLE) {
+				dronesControlIdleState(drone);
+			} else {
+				dronesControlChangeState(drone);
+			}
+		}
+	}
+
+	private void dronesControlIdleState(Drone drone) {
+		int batteryCapacity = drone.getBatteryCapacity();
+		if (batteryCapacity < 100) {
+			drone.setBatteryCapacity(batteryCapacity + 2);
+			droneRepo.save(drone);
+			log.debug("for drone {} battery capacity increased to {}", drone, batteryCapacity + 2);
+		}
+
+	}
+
+	private void dronesControlChangeState(Drone drone) {
+		int batteryCapacity = drone.getBatteryCapacity();
+		Map<State, State> statesMap = dronesConfiguration.getStatesMachine();
+		drone.setState(statesMap.get(drone.getState()));
+		drone.setBatteryCapacity(batteryCapacity - 2);
+		droneRepo.save(drone);
+		log.debug("for drone {} battery capacity decreased to {} and state changed to {}", drone, batteryCapacity - 2,
+				drone.getState());
+	}
 }

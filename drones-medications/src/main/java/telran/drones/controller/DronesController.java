@@ -1,16 +1,10 @@
 package telran.drones.controller;
 
-import static telran.drones.api.DronesValidationErrorMessages.DRONE_NUMBER_WRONG_LENGTH;
-import static telran.drones.api.DronesValidationErrorMessages.MAX_DRONE_NUMBER_LENGTH;
-import static telran.drones.api.DronesValidationErrorMessages.MISSING_DRONE_NUMBER;
-
 import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import telran.drones.api.UrlConstants;
@@ -35,33 +29,28 @@ public class DronesController {
 		return dronesService.loadDrone(droneMedication);
 	}
 
-	@GetMapping(UrlConstants.CHECK_MEDICATION_ITEMS)
-	List<String> checkMedicationItems(
-			@PathVariable(name = "droneNumber") @Size(max = MAX_DRONE_NUMBER_LENGTH, message = DRONE_NUMBER_WRONG_LENGTH) @NotEmpty(message = MISSING_DRONE_NUMBER) String droneNumber) {
-		log.debug("received: {}", droneNumber);
+	@GetMapping(UrlConstants.DRONE_MEDICATION_ITEMS + "{" + UrlConstants.DRONE_NUMBER + "}")
+	List<String> checkMedicationItems(@PathVariable(UrlConstants.DRONE_NUMBER) String droneNumber) {
+		log.debug("checkMedicationItems controller for drone {}", droneNumber);
 		return dronesService.checkMedicationItems(droneNumber);
 
 	}
 
-	@GetMapping(UrlConstants.CHECK_AVAILABLE_DRONES)
+	@GetMapping(UrlConstants.AVAILABLE_DRONES)
 	List<String> checkAvailableDrones() {
-		log.debug("received request : check for available drones");
+		log.debug("checkAvailableDrones controller");
 		return dronesService.checkAvailableDrones();
-
 	}
 
-	@GetMapping(UrlConstants.CHECK_BATERY_CAPACITY)
-	int checkBatteryCapacity(
-			@PathVariable(name = "droneNumber") @Size(max = MAX_DRONE_NUMBER_LENGTH, message = DRONE_NUMBER_WRONG_LENGTH) @NotEmpty(message = MISSING_DRONE_NUMBER) String droneNumber) {
-		log.debug("received: {}", droneNumber);
+	@GetMapping(UrlConstants.DRONE_BATTERY_CAPACITY + "{" + UrlConstants.DRONE_NUMBER + "}")
+	int checkBatteryCapacity(@PathVariable(UrlConstants.DRONE_NUMBER) String droneNumber) {
+		log.debug("checkBatteryCapacity controller for drone {}", droneNumber);
 		return dronesService.checkBatteryCapacity(droneNumber);
 
 	}
-
-	@GetMapping(UrlConstants.CHECK_DRONE_LOADED_ITEM_AMOUNT)
-	List<DroneItemsAmount> checkDroneLoadedItemAmounts() {
-		log.debug("received request : check for drones loaded items amount");
+	@GetMapping(UrlConstants.DRONES_AMOUNT_ITEMS) 
+	List<DroneItemsAmount> checkDronesMedItems() {
+		log.debug("checkDronesMedItems controller");
 		return dronesService.checkDroneLoadedItemAmounts();
-
 	}
 }

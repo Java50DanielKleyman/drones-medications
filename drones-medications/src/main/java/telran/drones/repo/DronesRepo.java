@@ -7,14 +7,11 @@ import org.springframework.data.jpa.repository.Query;
 
 import telran.drones.dto.State;
 import telran.drones.model.*;
+import telran.drones.projections.DroneNumber;
 
 public interface DronesRepo extends JpaRepository<Drone, String> {
-	@Query("""
-			select number from Drone where state= :state
-			""")
-	List<String> findDronesByState(State state);
-	@Query("""
-			select batteryCapacity from Drone where number= :number
-			""")
-	int findBatteryCapacityByNumber(String number);
+	List<DroneNumber> findByStateAndBatteryCapacityGreaterThanEqual(State state, int capacityThreshold);
+	@Query("select batteryCapacity from Drone where number=:droneNumber")
+		Integer findBatteryCapacity(String droneNumber);
+
 }
