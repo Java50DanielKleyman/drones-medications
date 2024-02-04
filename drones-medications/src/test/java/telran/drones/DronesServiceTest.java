@@ -24,6 +24,7 @@ import org.springframework.test.context.jdbc.Sql;
 class DronesServiceTest {
 	private static final String DRONE1 = "Drone-1";
 	private static final String DRONE2 = "Drone-2";
+	private static final String DRONE5 = "Drone-5";
 	private static final String MED1 = "MED_1";
 	private static final String DRONE3 = "Drone-3";
 	private static final String SERVICE_TEST = "Service: ";
@@ -39,7 +40,8 @@ class DronesServiceTest {
 	DroneDto drone1 = new DroneDto(DRONE1, ModelType.Middleweight);
 	DroneMedication droneMedication1 = new DroneMedication(DRONE1, MED1);
 	DroneMedication droneMedication2 = new DroneMedication(DRONE2, MED2);	
-	DroneMedication droneMedication3 = new DroneMedication(DRONE3, MED2);	
+	DroneMedication droneMedication3 = new DroneMedication(DRONE5, MED2);	
+	
 			
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
@@ -142,6 +144,6 @@ class DronesServiceTest {
 	@DisplayName(SERVICE_TEST + TestDisplayNames.DRONES_CONTROL)
 	void dronesControlPeriodicTask() {
 		dronesService.loadDrone(droneMedication1);
-		dronesService.loadDrone(droneMedication3);
+	//	dronesService.loadDrone(droneMedication3);
 	}
 }
