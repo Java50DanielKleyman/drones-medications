@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.EnableScheduling;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -142,6 +142,7 @@ public class DronesServiceImpl implements DronesService {
 		if (batteryCapacity < 100) {
 			drone.setBatteryCapacity(batteryCapacity + 2);
 			droneRepo.save(drone);
+			logRepo.save(new EventLog(LocalDateTime.now(), drone.getNumber(), State.IDLE, drone.getBatteryCapacity()));
 			log.debug("for drone {} battery capacity increased to {}", drone, batteryCapacity + 2);
 		}
 
