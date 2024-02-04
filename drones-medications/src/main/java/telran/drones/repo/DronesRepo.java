@@ -13,5 +13,5 @@ public interface DronesRepo extends JpaRepository<Drone, String> {
 	List<DroneNumber> findByStateAndBatteryCapacityGreaterThanEqual(State state, int capacityThreshold);
 	@Query("select batteryCapacity from Drone where number=:droneNumber")
 		Integer findBatteryCapacity(String droneNumber);
-
+Drone findByNumber(String number);
 }
