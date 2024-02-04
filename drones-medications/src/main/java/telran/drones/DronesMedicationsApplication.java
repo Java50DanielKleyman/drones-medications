@@ -14,4 +14,5 @@ public class DronesMedicationsApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(DronesMedicationsApplication.class, args);
 	}
+	
 }

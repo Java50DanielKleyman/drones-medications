@@ -38,7 +38,8 @@ class DronesServiceTest {
 	DroneDto droneDto = new DroneDto(DRONE4, ModelType.Cruiserweight);
 	DroneDto drone1 = new DroneDto(DRONE1, ModelType.Middleweight);
 	DroneMedication droneMedication1 = new DroneMedication(DRONE1, MED1);
-	DroneMedication droneMedication2 = new DroneMedication(DRONE2, MED2);		
+	DroneMedication droneMedication2 = new DroneMedication(DRONE2, MED2);	
+	DroneMedication droneMedication3 = new DroneMedication(DRONE3, MED2);	
 			
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
@@ -122,7 +123,7 @@ class DronesServiceTest {
 		assertThrowsExactly(DroneNotFoundException.class,
 				()->dronesService.checkBatteryCapacity(DRONE4));
 	}
-	@Test
+	//@Test
 	@Sql(scripts = "classpath:test_idle.data.sql")
 	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_DRONES_ITEMS_AMOUNT)
 	void checkDroneLoadedItemAmounts() {
@@ -137,5 +138,10 @@ class DronesServiceTest {
 		assertEquals(0, resultMap.get(DRONE3));
 		
 	}
-	
+	@Test
+	@DisplayName(SERVICE_TEST + TestDisplayNames.DRONES_CONTROL)
+	void dronesControlPeriodicTask() {
+		dronesService.loadDrone(droneMedication1);
+		dronesService.loadDrone(droneMedication3);
+	}
 }

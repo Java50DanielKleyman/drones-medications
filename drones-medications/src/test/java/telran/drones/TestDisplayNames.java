@@ -24,5 +24,5 @@ String CHECK_LOGS_NORMAL = "Checking Logs Normal Flow";
 String CHECK_LOGS_DRONE_NOT_FOUND = "Checking Logs, Drone Not Found";
 String CHECK_DRONES_ITEMS_AMOUNT = "Checking Drone Numbers and amounts of the loaded medication items";
 String REGISTER_DRONE_WRONG_TYPE = "Registring Drone with JSON containing mismatch fields";
-
+String DRONES_CONTROL = "Checking drones battery levels and creating history/audit event log for each drone";
 }

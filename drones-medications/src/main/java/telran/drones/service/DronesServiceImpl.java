@@ -125,18 +125,20 @@ public class DronesServiceImpl implements DronesService {
 		return res;
 	}
 
+	@Transactional(readOnly = false)
 	@Scheduled(fixedDelay = 2000)
 	public void dronesControl() {
 		List<Drone> dronesList = droneRepo.findAll();
 		for (Drone drone : dronesList) {
+//			logRepo.save(new EventLog(LocalDateTime.now(), drone.getNumber(), State.IDLE, drone.getBatteryCapacity()));
 			if (drone.getState() == State.IDLE) {
 				dronesControlIdleState(drone);
 			} else {
 				dronesControlChangeState(drone);
 			}
-		}
+		}		
 	}
-
+	@Transactional(readOnly = false)
 	private void dronesControlIdleState(Drone drone) {
 		int batteryCapacity = drone.getBatteryCapacity();
 		if (batteryCapacity < 100) {
@@ -147,7 +149,7 @@ public class DronesServiceImpl implements DronesService {
 		}
 
 	}
-
+	@Transactional(readOnly = false)
 	private void dronesControlChangeState(Drone drone) {
 		int batteryCapacity = drone.getBatteryCapacity();
 		Map<State, State> statesMap = dronesConfiguration.getStatesMachine();
