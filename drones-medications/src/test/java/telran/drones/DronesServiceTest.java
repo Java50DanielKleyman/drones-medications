@@ -45,7 +45,7 @@ class DronesServiceTest {
 	DroneMedication droneMedication3 = new DroneMedication(DRONE5, MED2);
 	List<State> ALL_STATES = Arrays.asList(State.LOADING, State.LOADED, State.DELIVERING, State.DELIVERING1,
 			State.DELIVERING2, State.DELIVERING3, State.DELIVERED, State.RETURNING, State.RETURNING1, State.RETURNING2,
-			State.RETURNING3, State.IDLE);
+			State.RETURNING3, State.IDLE, State.IDLE,State.IDLE);
 
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
@@ -160,10 +160,16 @@ class DronesServiceTest {
 		Thread.sleep(40000);
 		List<EventLog> listOfLogs = logRepo.findAllByDroneNumberOrderByTimestampAsc(DRONE1);
 		for (int i = 0; i < ALL_STATES.size(); i++) {
-			assertEquals(ALL_STATES.get(i), listOfLogs.get(i).getState());			
-			assertEquals(batteryCapacity, listOfLogs.get(i).getBatteryCapacity());
-			batteryCapacity -=2;
+			State droneState = listOfLogs.get(i).getState();
+			assertEquals(ALL_STATES.get(i), droneState);
+			if (droneState == State.IDLE) {
+				assertEquals(batteryCapacity, listOfLogs.get(i).getBatteryCapacity());
+				batteryCapacity += 2;
+			} else {
+				assertEquals(batteryCapacity, listOfLogs.get(i).getBatteryCapacity());
+				batteryCapacity -= 2;
+			}
 		}
-		
+
 	}
 }
